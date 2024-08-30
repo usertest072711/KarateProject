@@ -1,0 +1,44 @@
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class ExcelUtil {
+    public static List<Map<String, String>> readExcel(InputStream inputStream, String sheetName) throws Exception {
+        List<Map<String, String>> data = new ArrayList<>();
+        XSSFWorkbook workbook = new XSSFWorkbook(inputStream);
+        Sheet sheet = workbook.getSheet(sheetName);
+        if (sheet == null) {
+            throw new IllegalArgumentException("Sheet not found: " + sheetName);
+        }
+
+        Row headerRow = sheet.getRow(0);
+        if (headerRow == null) {
+            throw new IllegalArgumentException("Header row is missing");
+        }
+
+        int numCols = headerRow.getPhysicalNumberOfCells();
+        List<String> headers = new ArrayList<>();
+        for (int i = 0; i < numCols; i++) {
+            headers.add(headerRow.getCell(i).getStringCellValue());
+        }
+
+        for (int i = 1; i < sheet.getPhysicalNumberOfRows(); i++) {
+            Row row = sheet.getRow(i);
+            if (row == null) continue;
+
+            Map<String, String> rowData = new HashMap<>();
+            for (int j = 0; j < numCols; j++) {
+                rowData.put(headers.get(j), row.getCell(j).getStringCellValue());
+            }
+            data.add(rowData);
+        }
+        workbook.close();
+        return data;
+    }
+}
